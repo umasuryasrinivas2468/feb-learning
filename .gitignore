@@ -10,8 +10,12 @@ venv/
 # Datasets (pulled via scripts/download_data.py / kagglehub cache)
 data/
 
-# Model checkpoints & training artifacts
+# Model checkpoints & training artifacts.
+# global_model.pt is the exception: the deployed dashboard loads it from the
+# repo, and at ~27MB it is comfortably under GitHub's 100MB limit, so it is
+# tracked directly with no need for Git LFS.
 checkpoints/*.pt
+!checkpoints/global_model.pt
 checkpoints/round_cache/
 checkpoints/training_log.json
 

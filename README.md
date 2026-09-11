@@ -37,8 +37,11 @@ backend/dashboard work regardless of which one you used.
 ```powershell
 py -m venv .venv
 .venv\Scripts\activate
-pip install -r requirements.txt
+pip install -r requirements-train.txt   # runtime + training deps
 ```
+
+(`requirements.txt` alone installs only what inference needs -- that is the
+file the deployed dashboard builds from. See **Deploying** below.)
 
 ### 1. Get a Kaggle API token (once)
 
@@ -98,6 +101,56 @@ streamlit run frontend/app.py
 Open the Streamlit URL it prints, upload a chest X-ray, and you'll get the
 predicted class, confidence score, and a Grad-CAM heatmap overlay showing
 which lung regions drove the prediction.
+
+## Deploying to Streamlit Community Cloud
+
+The dashboard runs in one of two modes:
+
+- **standalone** (default) -- loads the model in-process via `src/inference.py`.
+  This is what makes it deployable to a single-process host, where there is
+  nowhere to run `uvicorn` next to Streamlit.
+- **remote** -- set `PNEUMONIA_BACKEND_URL` and it calls the FastAPI
+  `/predict` endpoint instead (the two-service architecture from the
+  Software Requirements slide).
+
+Dependencies are split so the deploy build stays small: `requirements.txt`
+holds inference-only packages and pins CPU torch wheels, while
+`requirements-train.txt` adds Flower, Opacus, kagglehub and the evaluation
+stack. `flwr[simulation]` pulls in Ray (hundreds of MB) and will overrun a
+free-tier build, so it must stay out of the runtime file.
+
+### 1. Train first
+
+`checkpoints/global_model.pt` is tracked in git (~27MB, no Git LFS needed)
+and the deployed app loads it from the repo. **Deploying without it puts a
+pneumonia screener running on random weights on the public internet** -- the
+dashboard detects this and shows a prominent warning, but train before you
+demo it:
+
+```powershell
+python scripts/train_manual.py --resume
+```
+
+### 2. Push to GitHub
+
+```powershell
+git remote add origin https://github.com/<you>/<repo>.git
+git push -u origin master
+```
+
+### 3. Create the app
+
+On [share.streamlit.io](https://share.streamlit.io): **New app** -> pick the
+repo -> set **Main file path** to `frontend/app.py` -> Deploy. The link is
+`https://<app-name>.streamlit.app`.
+
+Leave `PNEUMONIA_BACKEND_URL` unset so the app runs standalone.
+
+### Resource note
+
+Streamlit Community Cloud's free tier caps app memory at ~1GB. Torch plus
+DenseNet-121 inference fits, but not with much headroom -- if the app gets
+OOM-killed on upload, the fix is a smaller backbone or a host with more RAM.
 
 ## Project layout
 

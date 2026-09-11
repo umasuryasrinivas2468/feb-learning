@@ -1,0 +1,12 @@
+# Full development/training environment: everything the dashboard needs at
+# runtime, plus the federated-learning, differential-privacy and evaluation
+# stack used by scripts/train_manual.py, scripts/train_flower.py and
+# scripts/evaluate_model.py.
+-r requirements.txt
+
+flwr[simulation]>=1.13
+opacus>=1.5
+kagglehub
+scikit-learn
+matplotlib
+pandas

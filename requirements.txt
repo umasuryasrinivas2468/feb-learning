@@ -1,17 +1,27 @@
+# Runtime dependencies for the deployed dashboard.
+#
+# Streamlit Community Cloud installs this file, so it deliberately holds ONLY
+# what inference needs. Training-only packages (Flower, Opacus, kagglehub,
+# scikit-learn, matplotlib) live in requirements-train.txt -- flwr[simulation]
+# pulls in Ray, which is hundreds of MB and overruns free-tier build limits.
+#
+# For local development including training:  pip install -r requirements-train.txt
+
+# CPU-only torch wheels: the default Linux wheels bundle CUDA (~2.5GB) and
+# will not fit in a free-tier build.
+--extra-index-url https://download.pytorch.org/whl/cpu
+
 torch>=2.2
 torchvision>=0.17
-flwr[simulation]>=1.13
-opacus>=1.5
 grad-cam>=1.5
-fastapi>=0.110
-uvicorn[standard]>=0.29
-python-multipart>=0.0.9
 streamlit>=1.33
 pillow
 numpy
-pandas
 opencv-python-headless
-scikit-learn
-matplotlib
-kagglehub
+
+# FastAPI backend -- optional locally (remote mode); unused when the dashboard
+# runs standalone on a single-process host.
+fastapi>=0.110
+uvicorn[standard]>=0.29
+python-multipart>=0.0.9
 requests
