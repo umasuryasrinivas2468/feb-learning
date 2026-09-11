@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Virtualenv
+.venv/
+venv/
+
+# Datasets (pulled via scripts/download_data.py / kagglehub cache)
+data/
+
+# Model checkpoints & training artifacts
+checkpoints/*.pt
+checkpoints/round_cache/
+checkpoints/training_log.json
+
+# Runtime logs / pids from local backend+frontend runs
+*.log
+*_pid.txt
+
+# Secrets
+kaggle.json
+.env
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.ipynb_checkpoints/
