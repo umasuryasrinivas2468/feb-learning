@@ -14,6 +14,13 @@
 torch>=2.2
 torchvision>=0.17
 grad-cam>=1.5
+
+# Opacus is a RUNTIME dep, not just a training one: build_model() uses
+# ModuleValidator.fix() to swap BatchNorm for GroupNorm, which changes the
+# state_dict shapes. Inference has to construct the identical architecture or
+# the checkpoint will not load. (It is Flower's Ray dependency that must stay
+# out of this file, not this one -- opacus itself is small.)
+opacus>=1.5
 streamlit>=1.33
 pillow
 numpy
