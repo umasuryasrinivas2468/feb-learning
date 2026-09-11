@@ -119,7 +119,9 @@ def run_manual_federated_training(
             cache_path = _client_cache_path(round_idx, client_id)
 
             if resume and os.path.exists(cache_path):
-                cached = torch.load(cache_path, map_location=config.DEVICE)
+                # weights_only=False: this cache is written by _this_ process a few
+                # lines below, and holds a plain epsilon float alongside the tensors.
+                cached = torch.load(cache_path, map_location=config.DEVICE, weights_only=False)
                 round_results.append((cached["state_dict"], cached["n_samples"]))
                 if cached["epsilon"] is not None:
                     round_epsilons.append(cached["epsilon"])
@@ -141,7 +143,10 @@ def run_manual_federated_training(
             if epsilon is not None:
                 round_epsilons.append(epsilon)
 
-            torch.save({"state_dict": state_dict, "n_samples": n_samples, "epsilon": epsilon}, cache_path)
+            # float(): Opacus returns epsilon as a numpy scalar, which torch.load
+            # refuses to unpickle under its weights_only=True default.
+            torch.save({"state_dict": state_dict, "n_samples": n_samples,
+                        "epsilon": None if epsilon is None else float(epsilon)}, cache_path)
 
             elapsed = time.time() - start
             msg = f"  round {round_idx} / client {client_id}: n={n_samples}, took {elapsed:.0f}s"
